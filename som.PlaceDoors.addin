@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>PlaceDoors Application </Name>
+    <Assembly>PlaceDoors.dll</Assembly>
+    <FullClassName>SOM.RevitTools.PlaceDoors.App</FullClassName>
+    <ClientId>04e2fc3f-99f9-4ab8-98dd-e8d0a7ccfb78</ClientId>
+    <VendorId>Danny Bentley</VendorId>
+    <VendorDescription>danny.bentley@som.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>
