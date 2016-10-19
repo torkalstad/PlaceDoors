@@ -47,16 +47,15 @@ namespace SOM.RevitTools.PlaceDoors
                             // find and match of door level and linked model level to get level 
                             Level levelName = levels.Find(x => Convert.ToString(x.Id.IntegerValue) == parmLevel_Id);
 
+                            FamilySymbol familySymbol = library.GetFamilySymbol(doc, door.Name, BuiltInCategory.OST_Doors);
                             // find unique identification of door
-                            Parameter doorComment = door.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
-                            string doorId = library.GetParameterValue(doorComment);
 
                             ObjDoors ObjectDoor = new ObjDoors();
                             ObjectDoor.doorElement = door;
                             ObjectDoor.doorName = door.Name;
                             ObjectDoor.doorId = door.Id.ToString();
-                            Parameter doorHeight = door.get_Parameter(BuiltInParameter.DOOR_HEIGHT);
-                            ObjectDoor.doorHeight = library.GetParameterValue(doorHeight);
+                            ObjectDoor.doorWidth = familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_WIDTH_PARAM).AsDouble();
+                            ObjectDoor.doorHeight = familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_HEIGHT_PARAM).AsDouble();
                             ObjectDoor.X = location.Point.X;
                             ObjectDoor.Y = location.Point.Y;
                             ObjectDoor.Z = location.Point.Z;
