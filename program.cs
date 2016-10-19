@@ -59,12 +59,31 @@ namespace SOM.RevitTools.PlaceDoors
                     {
                         string ErrMessage = e.Message;
                     }
+                    // Check to see if door size match. 
+                    double height = Math.Round(linkedDoor.doorHeight, 2);
+                    double width = Math.Round(linkedDoor.doorHeight, 2);
+                    String doorType = height.toString() + "X" + width.toString();
+                    if(DoorFound.Name != doorType)
+                    {
+                        FamilySymbol familySymbol = findSymbol(doc, doorType);
+                        if(familySymbol == null)
+                        {
+                            FamilySymbol oldType = findSymbol(doc, "12x12");
+                            familySymbol = CreateNewType(oldType, doorType);
+                            //TODO CHANGE TYPE 
+                        }
+                        if(familySymbol != null)
+                        {
+                            //TODO CHANGE TYPE 
+                        }
+                    }
+                    
                 }
             }
 
         }
         /// <summary>
-        /// Create a door in the project 
+        /// Create a door in the project from linked model.  
         /// </summary>
         /// <param name="uidoc"></param>
         /// <param name="doc"></param>
@@ -72,15 +91,20 @@ namespace SOM.RevitTools.PlaceDoors
         public void CreateDoors(UIDocument uidoc, Document doc, ObjDoors door)
         {
             Level level = findLevel(doc, door);
-            FamilySymbol familySymbol = findSymbol(doc, door);
-
+            // make door type height x width 
+            double height = Math.Round(linkedDoor.doorHeight, 2);
+            double width = Math.Round(linkedDoor.doorHeight, 2);
+            String doorType = height.toString() + "X" + width.toString();
+            FamilySymbol familySymbol = findSymbol(doc, doorType);
+            if(familySymbol = null)
+            {
+                FamilySymbol oldType = findSymbol(doc, "12x12");
+                familySymbol = CreateNewType(oldType, doorType)
+            }
             // Convert coordinates to double and create XYZ point.
             XYZ xyz = new XYZ(door.X, door.Y, door.Z);
            
             //Find the hosting Wall (nearst wall to the insertion point)
-            //FilteredElementCollector collector = new FilteredElementCollector(doc);
-            //collector.OfClass(typeof(Wall));
-            //List<Wall> walls = collector.Cast<Wall>().Where(wl => wl.Id == level.Id).ToList();
             MyLibrary Library = new MyLibrary();
             List<Wall> walls = Library.GetWalls(doc);
             
@@ -117,8 +141,9 @@ namespace SOM.RevitTools.PlaceDoors
                 // Create window
                 // unliss you specified a host, Rebit will create the family instance as orphabt object.
                 FamilyInstance fm = doc.Create.NewFamilyInstance(xyz, familySymbol, wall, level, StructuralType.NonStructural);
-                Parameter parameter = fm.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
-                parameter.Set(door.doorId);
+                // Set new local door id to match linked model element id. 
+                Parameter SOMIDParam = door.LookupParameter("SOM ID");
+                SOMIDParam.Set(door.doorId);
                 t.Commit();
             }
         }
@@ -158,6 +183,19 @@ namespace SOM.RevitTools.PlaceDoors
             //ElementTransformUtils.RotateElement(doc, element.Id, New_Axis, Rotate);
 
             t.Commit();
+        }
+
+        public FamilySymbol CreateNewType(FamilySymbol oldType, String typeName)
+        {
+            using (Transaction t = new Transaction(doc, "Duplicate door"))
+            {
+                t.Start("duplicate");
+                FamilySymbol familySymbol = oldType.Duplicate(Type_Name) as FamilySymbol;
+                familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_WIDTH_PARAM).Set();
+                familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_HEIGHT_PARAM).Set();
+                t.Commit;
+            }
+            return familySymbol; 
         }
 
         /// <summary>
