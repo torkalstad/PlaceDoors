@@ -35,119 +35,148 @@ namespace SOM.RevitTools.PlaceDoors
 
             foreach (ObjDoors linkedDoor in List_DoorsLinkedModel)
             {
-                // check to see if door exist 
-                ObjDoors DoorFound = List_DoorsCurrentModel.Find(x => x.doorId == linkedDoor.doorId);
-                
-                if (DoorFound == null)
+                if (!linkedDoor.doorName.Contains("Glazed") || !linkedDoor.doorName.Contains("Glass"))
                 {
-                    try
+                    // check to see if door exist 
+                    ObjDoors DoorFound = List_DoorsCurrentModel.Find(x => x.doorId == linkedDoor.doorId);
+                    // if it doesn't exist it will create a new door. 
+                    if (DoorFound == null)
                     {
-                        CreateDoors(uidoc, doc, linkedDoor);
-                    }
-                    catch (Exception e)
-                    {
-                        string ErrMessage = e.Message;
-                    }
-                }
-                if (DoorFound != null)
-                {
-                    try
-                    {
-                        MoveDoors(doc, linkedDoor, DoorFound);
-                    }
-                    catch (Exception e)
-                    {
-                        string ErrMessage = e.Message;
-                    }
-                    // Check to see if door size match. 
-                    double height = Math.Round(linkedDoor.doorHeight, 2);
-                    double width = Math.Round(linkedDoor.doorHeight, 2);
-                    String doorType = height.toString() + "X" + width.toString();
-                    if(DoorFound.Name != doorType)
-                    {
-                        FamilySymbol familySymbol = findSymbol(doc, doorType);
-                        if(familySymbol == null)
+                        try
                         {
-                            FamilySymbol oldType = findSymbol(doc, "12x12");
-                            familySymbol = CreateNewType(oldType, doorType);
-                            //TODO CHANGE TYPE 
+                            CreateDoors(uidoc, doc, linkedDoor);
                         }
-                        if(familySymbol != null)
+                        catch (Exception e)
                         {
-                            //TODO CHANGE TYPE 
+                            string ErrMessage = e.Message;
                         }
                     }
-                    
+
+                    // if door exist the check to see if the location is the same and type. 
+                    if (DoorFound != null)
+                    {
+                        try
+                        {
+                            MoveDoors(doc, linkedDoor, DoorFound);
+                        }
+                        catch (Exception e)
+                        {
+                            string ErrMessage = e.Message;
+                        }
+
+                        // Check to see if door size match. 
+                        double height = Math.Round(linkedDoor.doorHeight, 2);
+                        double width = Math.Round(linkedDoor.doorWidth, 2);
+                        String doorType = height.ToString() + "X" + width.ToString();
+                        if (doorType != "0X0")
+                        {
+                            if (DoorFound.doorName != doorType)
+                            {
+                                //FamilySymbol familySymbol = findSymbol(doc, DoorFound, doorType);
+                                FamilySymbol familySymbol = FindElementByName(doc, typeof(FamilySymbol), doorType) as FamilySymbol;
+                                if (familySymbol == null)
+                                {
+                                    FamilySymbol oldType = findSymbol(doc, DoorFound);
+
+                                    FamilySymbol ChangeFamilySymbol = CreateNewType(doc, oldType, linkedDoor);
+                                    changeType(doc, DoorFound, ChangeFamilySymbol);
+                                }
+                                if (familySymbol != null)
+                                {
+                                    changeType(doc, DoorFound, familySymbol);
+                                }
+                            }
+                        }
+
+                    }
                 }
             }
 
         }
+
         /// <summary>
         /// Create a door in the project from linked model.  
         /// </summary>
         /// <param name="uidoc"></param>
         /// <param name="doc"></param>
-        /// <param name="door"></param>
-        public void CreateDoors(UIDocument uidoc, Document doc, ObjDoors door)
+        /// <param name="linkedDoor"></param>
+        public void CreateDoors(UIDocument uidoc, Document doc, ObjDoors linkedDoor)
         {
-            Level level = findLevel(doc, door);
+            MyLibrary Library = new MyLibrary();
+            Level level = findLevel(doc, linkedDoor);
             // make door type height x width 
             double height = Math.Round(linkedDoor.doorHeight, 2);
-            double width = Math.Round(linkedDoor.doorHeight, 2);
-            String doorType = height.toString() + "X" + width.toString();
-            FamilySymbol familySymbol = findSymbol(doc, doorType);
-            if(familySymbol = null)
+            double width = Math.Round(linkedDoor.doorWidth, 2);
+            String doorType = height.ToString() + "X" + width.ToString();
+            if (doorType != "0X0")
             {
-                FamilySymbol oldType = findSymbol(doc, "12x12");
-                familySymbol = CreateNewType(oldType, doorType)
-            }
-            // Convert coordinates to double and create XYZ point.
-            XYZ xyz = new XYZ(door.X, door.Y, door.Z);
-           
-            //Find the hosting Wall (nearst wall to the insertion point)
-            MyLibrary Library = new MyLibrary();
-            List<Wall> walls = Library.GetWalls(doc);
-            
-            Wall wall = null;
-            double distance = double.MaxValue;
-            foreach (Element e in walls)
-            {
-                Wall w = e as Wall;
-                LocationCurve lc = w.Location as LocationCurve;
-                Curve curve = lc.Curve;
-                XYZ z = curve.GetEndPoint(0);
-                if (door.level.Elevation <= z.Z + 3 || door.level.Elevation >= z.Z - 3)
+                FamilySymbol currentDoorType = null;
+                try
                 {
-                    int i = w.Id.IntegerValue;
+                    currentDoorType = FindElementByName(doc, typeof(FamilySymbol), doorType) as FamilySymbol;
                 }
-                double proximity = (w.Location as LocationCurve).Curve.Distance(xyz);
-                if (proximity < distance)
-                {
-                    distance = proximity;
-                    wall = w;
-                }
-            }
+                catch { }
 
-            // Create door.
-            using (Transaction t = new Transaction(doc, "Create door"))
-            {
-                t.Start();
-                if (!familySymbol.IsActive)
+                if (currentDoorType == null)
                 {
-                    // Ensure the family symbol is activated.
-                    familySymbol.Activate();
-                    doc.Regenerate();
+                    FamilySymbol familySymbol_OldType = FindElementByName(doc, typeof(FamilySymbol), "12X12") as FamilySymbol;
+                    currentDoorType = CreateNewType(doc, familySymbol_OldType, linkedDoor);
                 }
-                // Create window
-                // unliss you specified a host, Rebit will create the family instance as orphabt object.
-                FamilyInstance fm = doc.Create.NewFamilyInstance(xyz, familySymbol, wall, level, StructuralType.NonStructural);
-                // Set new local door id to match linked model element id. 
-                Parameter SOMIDParam = door.LookupParameter("SOM ID");
-                SOMIDParam.Set(door.doorId);
-                t.Commit();
+
+                // Convert coordinates to double and create XYZ point.
+                XYZ xyz = new XYZ(linkedDoor.X, linkedDoor.Y, linkedDoor.Z);
+
+                //Find the hosting Wall (nearst wall to the insertion point)
+                List<Wall> walls = Library.GetWalls(doc);
+
+                Wall wall = null;
+                double distance = double.MaxValue;
+                foreach (Element e in walls)
+                {
+                    Wall w = e as Wall;
+                    LocationCurve lc = w.Location as LocationCurve;
+                    Curve curve = lc.Curve;
+                    XYZ z = curve.GetEndPoint(0);
+                    if (linkedDoor.level.Elevation <= z.Z + 3 && linkedDoor.level.Elevation >= z.Z - 3)
+                    {
+                        int i = w.Id.IntegerValue;
+                    }
+                    double proximity = (w.Location as LocationCurve).Curve.Distance(xyz);
+                    if (proximity < distance)
+                    {
+                        distance = proximity;
+                        wall = w;
+                    }
+                }
+
+
+                // Create door.
+                using (Transaction t = new Transaction(doc, "Create door"))
+                {
+                    t.Start();
+                    if (!currentDoorType.IsActive)
+                    {
+                        // Ensure the family symbol is activated.
+                        currentDoorType.Activate();
+                        doc.Regenerate();
+                    }
+                    // Create window
+                    // unliss you specified a host, Revit will create the family instance as orphabt object.
+                    FamilyInstance fm = doc.Create.NewFamilyInstance(xyz, currentDoorType, wall, level, StructuralType.NonStructural);
+                    // Set new local door id to match linked model element id. 
+                    Parameter SOMIDParam = fm.LookupParameter("SOM ID");
+                    SOMIDParam.Set(linkedDoor.doorId);
+                    t.Commit();
+                }
             }
         }
 
+        /// <summary>
+        /// Move door by comparing XYZ position. 
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="linkedDoor"></param>
+        /// <param name="localDoor"></param>
         public void MoveDoors(Document doc, ObjDoors linkedDoor, ObjDoors localDoor)
         {
             Element linkedElement = linkedDoor.doorElement;
@@ -185,17 +214,50 @@ namespace SOM.RevitTools.PlaceDoors
             t.Commit();
         }
 
-        public FamilySymbol CreateNewType(FamilySymbol oldType, String typeName)
+        /// <summary>
+        /// Create new type by duplicating old type. 
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="oldType"></param>
+        /// <param name="linkedDoor"></param>
+        /// <returns></returns>
+        public FamilySymbol CreateNewType(Document doc, FamilySymbol oldType, ObjDoors linkedDoor)
         {
+            double height = Math.Round(linkedDoor.doorHeight, 2);
+            double width = Math.Round(linkedDoor.doorWidth, 2);
+            String doorType = height.ToString() + "X" + width.ToString();
+
+            FamilySymbol familySymbol = null;
             using (Transaction t = new Transaction(doc, "Duplicate door"))
             {
                 t.Start("duplicate");
-                FamilySymbol familySymbol = oldType.Duplicate(Type_Name) as FamilySymbol;
-                familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_WIDTH_PARAM).Set();
-                familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_HEIGHT_PARAM).Set();
-                t.Commit;
+                familySymbol = oldType.Duplicate(doorType) as FamilySymbol;
+                familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_WIDTH_PARAM).Set(width);
+                familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_HEIGHT_PARAM).Set(height);
+                t.Commit();
             }
             return familySymbol; 
+        }
+
+        /// <summary>
+        /// Change Type of element in Revit 
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="CurrentDoors"></param>
+        /// <param name="symbol"></param>
+        public void changeType(Document doc, ObjDoors CurrentDoors, FamilySymbol symbol)
+        {
+            Element e = CurrentDoors.doorElement;
+            FamilyInstance familyInstance = e as FamilyInstance;
+            // Transaction to change the element type 
+            Transaction trans = new Transaction(doc, "Edit Type");
+            trans.Start();
+            try
+            {
+                familyInstance.Symbol = symbol;
+            }
+            catch { }
+            trans.Commit();
         }
 
         /// <summary>
@@ -233,6 +295,40 @@ namespace SOM.RevitTools.PlaceDoors
                                          where (fs.Family.Name == fsFamilyName && fs.Name == fsName)
                                          select fs).First();
             return familySymbol;
+        }
+
+        /// <summary>
+        /// find symbol of door by name.
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="door"></param>
+        /// <returns></returns>
+        //public FamilySymbol findSymbol(Document doc, ObjDoors door, string familyType)
+        //{
+        //    string fsFamilyName = "Door-Opening";
+        //    string fsName = door.doorName;
+        //    // LINQ to find the window's FamilySymbol by its type name.
+        //    FamilySymbol familySymbol = (from fs in new FilteredElementCollector(doc).
+        //                                     OfClass(typeof(FamilySymbol)).
+        //                                     Cast<FamilySymbol>()
+        //                                 where (fs.Family.Name == fsFamilyName && fs.Name == familyType)
+        //                                 select fs).First();
+        //    return familySymbol;
+        //}
+
+        /// <summary>
+        /// Find element by type name in the Revit model. 
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="targetType"></param>
+        /// <param name="targetName"></param>
+        /// <returns></returns>
+        public static Element FindElementByName(Document doc, Type targetType, string targetName)
+        {
+            return new FilteredElementCollector(doc)
+              .OfClass(targetType)
+              .FirstOrDefault<Element>(
+                e => e.Name.Equals(targetName));
         }
     }
 }

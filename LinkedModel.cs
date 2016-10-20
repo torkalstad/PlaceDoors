@@ -37,30 +37,37 @@ namespace SOM.RevitTools.PlaceDoors
                         List<Element> doors = library.GetFamilyElement(linkedDoc, BuiltInCategory.OST_Doors);
                         foreach (Element door in doors)
                         {
-                            LocationPoint location = door.Location as LocationPoint;
-                            // Get level id parameter
-                            Parameter levelId = door.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM);
-                            // Get level value of id parameter
-                            string parmLevel_Id = library.GetParameterValue(levelId);
-                            // get all levels in linked model 
-                            List<Level> levels = library.GetLevels(linkedDoc);
-                            // find and match of door level and linked model level to get level 
-                            Level levelName = levels.Find(x => Convert.ToString(x.Id.IntegerValue) == parmLevel_Id);
+                            try
+                            {
+                                LocationPoint location = door.Location as LocationPoint;
+                                // Get level id parameter
+                                Parameter levelId = door.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM);
+                                // Get level value of id parameter
+                                string parmLevel_Id = library.GetParameterValue(levelId);
+                                // get all levels in linked model 
+                                List<Level> levels = library.GetLevels(linkedDoc);
+                                // find and match of door level and linked model level to get level 
+                                Level levelName = levels.Find(x => Convert.ToString(x.Id.IntegerValue) == parmLevel_Id);
 
-                            FamilySymbol familySymbol = library.GetFamilySymbol(doc, door.Name, BuiltInCategory.OST_Doors);
-                            // find unique identification of door
+                                FamilySymbol familySymbol = library.GetFamilySymbol(linkedDoc, door.Name, BuiltInCategory.OST_Doors);
+                                // find unique identification of door
 
-                            ObjDoors ObjectDoor = new ObjDoors();
-                            ObjectDoor.doorElement = door;
-                            ObjectDoor.doorName = door.Name;
-                            ObjectDoor.doorId = door.Id.ToString();
-                            ObjectDoor.doorWidth = familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_WIDTH_PARAM).AsDouble();
-                            ObjectDoor.doorHeight = familySymbol.get_Parameter(BuiltInParameter.FAMILY_ROUGH_HEIGHT_PARAM).AsDouble();
-                            ObjectDoor.X = location.Point.X;
-                            ObjectDoor.Y = location.Point.Y;
-                            ObjectDoor.Z = location.Point.Z;
-                            ObjectDoor.level = levelName;
-                            LinkedModelDoors.Add(ObjectDoor);
+                                ObjDoors ObjectDoor = new ObjDoors();
+                                ObjectDoor.doorElement = door;
+                                ObjectDoor.doorName = door.Name;
+                                ObjectDoor.doorId = door.Id.ToString();
+                                ObjectDoor.doorWidth = door.get_Parameter(BuiltInParameter.DOOR_WIDTH).AsDouble();
+                                ObjectDoor.doorHeight = door.get_Parameter(BuiltInParameter.DOOR_HEIGHT).AsDouble();
+                                ObjectDoor.X = location.Point.X;
+                                ObjectDoor.Y = location.Point.Y;
+                                ObjectDoor.Z = location.Point.Z;
+                                ObjectDoor.level = levelName;
+                                LinkedModelDoors.Add(ObjectDoor);
+                            }
+                            catch (Exception er)
+                            {
+
+                            }
                         }
                     }
                 }
