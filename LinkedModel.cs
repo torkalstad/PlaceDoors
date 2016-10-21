@@ -55,8 +55,24 @@ namespace SOM.RevitTools.PlaceDoors
                                 ObjectDoor.doorElement = door;
                                 ObjectDoor.doorName = door.Name;
                                 ObjectDoor.doorId = door.Id.ToString();
+
                                 ObjectDoor.doorWidth = door.get_Parameter(BuiltInParameter.DOOR_WIDTH).AsDouble();
+                                try
+                                {
+                                    if (ObjectDoor.doorWidth == 0.0)
+                                        ObjectDoor.doorWidth = familySymbol.get_Parameter(BuiltInParameter.DOOR_WIDTH).AsDouble();
+
+                                }
+                                catch { }
+
                                 ObjectDoor.doorHeight = door.get_Parameter(BuiltInParameter.DOOR_HEIGHT).AsDouble();
+                                try
+                                {
+                                    if (ObjectDoor.doorHeight == 0.0)
+                                        ObjectDoor.doorHeight = familySymbol.get_Parameter(BuiltInParameter.DOOR_HEIGHT).AsDouble();
+                                }
+                                catch { }
+
                                 ObjectDoor.doorSillHeight = door.get_Parameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).AsDouble();
 
                                 ObjectDoor.X = location.Point.X;
@@ -67,7 +83,7 @@ namespace SOM.RevitTools.PlaceDoors
                             }
                             catch (Exception er)
                             {
-
+                                string error = er.Message;
                             }
                         }
                     }

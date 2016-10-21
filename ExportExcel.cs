@@ -17,7 +17,7 @@ namespace SOM.RevitTools.PlaceDoors
         {
             // Set the file name and get the output directory
             var fileName = DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss") + "-Revit-Doors" + ".xlsx";
-            var outputDir = @"F:\";
+            var outputDir = @"C:\";
 
             // Create the file using the FileInfo object
             FileInfo file = new FileInfo(outputDir + fileName);
