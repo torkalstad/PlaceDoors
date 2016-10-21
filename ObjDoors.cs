@@ -14,6 +14,7 @@ namespace SOM.RevitTools.PlaceDoors
         public string doorId { get; set; }
         public double doorHeight { get; set; }
         public double doorWidth { get; set; }
+        public double doorSillHeight { get; set; }
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }

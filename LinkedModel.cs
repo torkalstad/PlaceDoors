@@ -58,6 +58,7 @@ namespace SOM.RevitTools.PlaceDoors
                                 ObjectDoor.doorId = door.Id.ToString();
                                 ObjectDoor.doorWidth = door.get_Parameter(BuiltInParameter.DOOR_WIDTH).AsDouble();
                                 ObjectDoor.doorHeight = door.get_Parameter(BuiltInParameter.DOOR_HEIGHT).AsDouble();
+                                ObjectDoor.doorSillHeight = door.get_Parameter(BuiltInParameter.INSTANCE_SILL_HEIGHT_PARAM).AsDouble();
                                 ObjectDoor.X = location.Point.X;
                                 ObjectDoor.Y = location.Point.Y;
                                 ObjectDoor.Z = location.Point.Z;

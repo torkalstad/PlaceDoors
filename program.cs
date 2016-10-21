@@ -35,8 +35,8 @@ namespace SOM.RevitTools.PlaceDoors
 
             foreach (ObjDoors linkedDoor in List_DoorsLinkedModel)
             {
-                if (!linkedDoor.doorName.Contains("Glazed") || !linkedDoor.doorName.Contains("Glass"))
-                {
+                //if (!linkedDoor.doorName.Contains("Glazed") || !linkedDoor.doorName.Contains("Glass"))
+                //{
                     // check to see if door exist 
                     ObjDoors DoorFound = List_DoorsCurrentModel.Find(x => x.doorId == linkedDoor.doorId);
                     // if it doesn't exist it will create a new door. 
@@ -88,7 +88,7 @@ namespace SOM.RevitTools.PlaceDoors
                             }
                         }
 
-                    }
+                    //}
                 }
             }
 
@@ -124,7 +124,7 @@ namespace SOM.RevitTools.PlaceDoors
                 }
 
                 // Convert coordinates to double and create XYZ point.
-                XYZ xyz = new XYZ(linkedDoor.X, linkedDoor.Y, linkedDoor.Z);
+                XYZ xyz = new XYZ(linkedDoor.X, linkedDoor.Y, linkedDoor.level.Elevation + linkedDoor.doorSillHeight);
 
                 //Find the hosting Wall (nearst wall to the insertion point)
                 List<Wall> walls = Library.GetWalls(doc);
@@ -141,6 +141,7 @@ namespace SOM.RevitTools.PlaceDoors
                     {
                         int i = w.Id.IntegerValue;
                     }
+                    //int i = w.Id.IntegerValue;
                     double proximity = (w.Location as LocationCurve).Curve.Distance(xyz);
                     if (proximity < distance)
                     {
