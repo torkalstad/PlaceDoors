@@ -92,6 +92,7 @@
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Command.cs" />
+    <Compile Include="ExportExcel.cs" />
     <Compile Include="LinkedModel.cs" />
     <Compile Include="LocalModel.cs" />
     <Compile Include="ObjDoors.cs" />

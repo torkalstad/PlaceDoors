@@ -298,32 +298,6 @@ namespace SOM.RevitTools.PlaceDoors
             return familySymbol;
         }
 
-        /// <summary>
-        /// find symbol of door by name.
-        /// </summary>
-        /// <param name="doc"></param>
-        /// <param name="door"></param>
-        /// <returns></returns>
-        //public FamilySymbol findSymbol(Document doc, ObjDoors door, string familyType)
-        //{
-        //    string fsFamilyName = "Door-Opening";
-        //    string fsName = door.doorName;
-        //    // LINQ to find the window's FamilySymbol by its type name.
-        //    FamilySymbol familySymbol = (from fs in new FilteredElementCollector(doc).
-        //                                     OfClass(typeof(FamilySymbol)).
-        //                                     Cast<FamilySymbol>()
-        //                                 where (fs.Family.Name == fsFamilyName && fs.Name == familyType)
-        //                                 select fs).First();
-        //    return familySymbol;
-        //}
-
-        /// <summary>
-        /// Find element by type name in the Revit model. 
-        /// </summary>
-        /// <param name="doc"></param>
-        /// <param name="targetType"></param>
-        /// <param name="targetName"></param>
-        /// <returns></returns>
         public static Element FindElementByName(Document doc, Type targetType, string targetName)
         {
             return new FilteredElementCollector(doc)

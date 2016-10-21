@@ -35,7 +35,10 @@ namespace SOM.RevitTools.PlaceDoors
 
             // get doors from linked model 
             List_DoorsLinkedModel = linkedModel.LinkedModelDoors(doc, uiapp);
-            ExportToExcel(List_DoorsLinkedModel);
+            // Export to Excel to see information. 
+            ExportExcel exportExcel = new ExportExcel();
+            exportExcel.ExportToExcel(List_DoorsLinkedModel);
+
             // get doors from current model. 
             List_DoorsCurrentModel = localModel.CurrentModelDoors(doc);
 
