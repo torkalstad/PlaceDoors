@@ -13,7 +13,7 @@ namespace SOM.RevitTools.PlaceDoors
 {
     class ExportExcel
     {
-        public string ExportToExcel(List<ObjDoors> LinkedModelDoors)
+        public string ExportToExcel(List<ObjDoors> LinkedModelDoors, string WorkSheetName)
         {
             // Set the file name and get the output directory
             var fileName = DateTime.Now.ToString("yyyy-MM-dd-hh-mm-ss") + "-Revit-Doors" + ".xlsx";

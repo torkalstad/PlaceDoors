@@ -67,8 +67,8 @@ namespace SOM.RevitTools.PlaceDoors
                         // Check to see if door size match. 
                         double height = Math.Round(linkedDoor.doorHeight, 2);
                         double width = Math.Round(linkedDoor.doorWidth, 2);
-                        String doorType = height.ToString() + "X" + width.ToString();
-                        if (doorType != "0X0")
+                        String doorType = height.ToString() + "ft" + " x " + width.ToString() + "ft";
+                        if (doorType != "0ft x 0ft")
                         {
                             if (DoorFound.doorName != doorType)
                             {
@@ -107,8 +107,8 @@ namespace SOM.RevitTools.PlaceDoors
             // make door type height x width 
             double height = Math.Round(linkedDoor.doorHeight, 2);
             double width = Math.Round(linkedDoor.doorWidth, 2);
-            String doorType = height.ToString() + "X" + width.ToString();
-            if (doorType != "0X0")
+            String doorType = height.ToString() + "ft" + " x " + width.ToString() + "ft";
+            if (doorType != "0ft x 0ft")
             {
                 FamilySymbol currentDoorType = null;
                 try
@@ -119,7 +119,7 @@ namespace SOM.RevitTools.PlaceDoors
 
                 if (currentDoorType == null)
                 {
-                    FamilySymbol familySymbol_OldType = FindElementByName(doc, typeof(FamilySymbol), "12X12") as FamilySymbol;
+                    FamilySymbol familySymbol_OldType = FindElementByName(doc, typeof(FamilySymbol), "12ft x 12ft") as FamilySymbol;
                     currentDoorType = CreateNewType(doc, familySymbol_OldType, linkedDoor);
                 }
 
@@ -149,7 +149,6 @@ namespace SOM.RevitTools.PlaceDoors
                         wall = w;
                     }
                 }
-
 
                 // Create door.
                 using (Transaction t = new Transaction(doc, "Create door"))
@@ -226,7 +225,7 @@ namespace SOM.RevitTools.PlaceDoors
         {
             double height = Math.Round(linkedDoor.doorHeight, 2);
             double width = Math.Round(linkedDoor.doorWidth, 2);
-            String doorType = height.ToString() + "X" + width.ToString();
+            String doorType = height.ToString() + "ft" + " x " + width.ToString() + "ft";
 
             FamilySymbol familySymbol = null;
             using (Transaction t = new Transaction(doc, "Duplicate door"))
