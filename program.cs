@@ -15,6 +15,9 @@ namespace SOM.RevitTools.PlaceDoors
 {
     class program
     {
+        //Fields 
+        public List<ObjDoors> _List_CreatedDoors {get; set;}
+
         /// <summary>
         /// NLog added to log errors. 
         /// </summary>
@@ -27,71 +30,67 @@ namespace SOM.RevitTools.PlaceDoors
         /// <param name="uidoc"></param>
         /// <param name="List_DoorsLinkedModel"></param>
         /// <param name="List_DoorsCurrentModel"></param>
-        public void DoorProgram(Document doc, UIDocument uidoc, 
+        public void DoorProgram(Document doc, UIDocument uidoc,
             List<ObjDoors> List_DoorsLinkedModel, List<ObjDoors> List_DoorsCurrentModel)
         {
             // logger object. 
             Logger logger = LogManager.GetLogger("program");
+            ExportExcel exportExcel = new ExportExcel();
 
             foreach (ObjDoors linkedDoor in List_DoorsLinkedModel)
             {
-                //if (!linkedDoor.doorName.Contains("Glazed") || !linkedDoor.doorName.Contains("Glass"))
-                //{
-                    // check to see if door exist 
-                    ObjDoors DoorFound = List_DoorsCurrentModel.Find(x => x.doorId == linkedDoor.doorId);
-                    // if it doesn't exist it will create a new door. 
-                    if (DoorFound == null)
+                // check to see if door exist 
+                ObjDoors DoorFound = List_DoorsCurrentModel.Find(x => x.doorId == linkedDoor.doorId);
+                // if it doesn't exist it will create a new door. 
+                if (DoorFound == null)
+                {
+                    try
                     {
-                        try
-                        {
-                            CreateDoors(uidoc, doc, linkedDoor);
-                        }
-                        catch (Exception e)
-                        {
-                            string ErrMessage = e.Message;
-                        }
+                        CreateDoors(uidoc, doc, linkedDoor);
+                    }
+                    catch (Exception e)
+                    {
+                        string ErrMessage = e.Message;
+                    }
+                }
+
+                // if door exist the check to see if the location is the same and type. 
+                if (DoorFound != null)
+                {
+                    try
+                    {
+                        MoveDoors(doc, linkedDoor, DoorFound);
+                    }
+                    catch (Exception e)
+                    {
+                        string ErrMessage = e.Message;
                     }
 
-                    // if door exist the check to see if the location is the same and type. 
-                    if (DoorFound != null)
+                    // Check to see if door size match. 
+                    double height = Math.Round(linkedDoor.doorHeight, 2);
+                    double width = Math.Round(linkedDoor.doorWidth, 2);
+                    String doorType = height.ToString() + "ft" + " x " + width.ToString() + "ft";
+                    if (doorType != "0ft x 0ft")
                     {
-                        try
+                        if (DoorFound.doorName != doorType)
                         {
-                            MoveDoors(doc, linkedDoor, DoorFound);
-                        }
-                        catch (Exception e)
-                        {
-                            string ErrMessage = e.Message;
-                        }
-
-                        // Check to see if door size match. 
-                        double height = Math.Round(linkedDoor.doorHeight, 2);
-                        double width = Math.Round(linkedDoor.doorWidth, 2);
-                        String doorType = height.ToString() + "ft" + " x " + width.ToString() + "ft";
-                        if (doorType != "0ft x 0ft")
-                        {
-                            if (DoorFound.doorName != doorType)
+                            //FamilySymbol familySymbol = findSymbol(doc, DoorFound, doorType);
+                            FamilySymbol familySymbol = FindElementByName(doc, typeof(FamilySymbol), doorType) as FamilySymbol;
+                            if (familySymbol == null)
                             {
-                                //FamilySymbol familySymbol = findSymbol(doc, DoorFound, doorType);
-                                FamilySymbol familySymbol = FindElementByName(doc, typeof(FamilySymbol), doorType) as FamilySymbol;
-                                if (familySymbol == null)
-                                {
-                                    FamilySymbol oldType = findSymbol(doc, DoorFound);
+                                FamilySymbol oldType = findSymbol(doc, DoorFound);
 
-                                    FamilySymbol ChangeFamilySymbol = CreateNewType(doc, oldType, linkedDoor);
-                                    changeType(doc, DoorFound, ChangeFamilySymbol);
-                                }
-                                if (familySymbol != null)
-                                {
-                                    changeType(doc, DoorFound, familySymbol);
-                                }
+                                FamilySymbol ChangeFamilySymbol = CreateNewType(doc, oldType, linkedDoor);
+                                changeType(doc, DoorFound, ChangeFamilySymbol);
+                            }
+                            if (familySymbol != null)
+                            {
+                                changeType(doc, DoorFound, familySymbol);
                             }
                         }
-
-                    //}
+                    }
                 }
             }
-
         }
 
         /// <summary>
@@ -108,6 +107,7 @@ namespace SOM.RevitTools.PlaceDoors
             double height = Math.Round(linkedDoor.doorHeight, 2);
             double width = Math.Round(linkedDoor.doorWidth, 2);
             String doorType = height.ToString() + "ft" + " x " + width.ToString() + "ft";
+
             if (doorType != "0ft x 0ft")
             {
                 FamilySymbol currentDoorType = null;
@@ -153,6 +153,7 @@ namespace SOM.RevitTools.PlaceDoors
                 // Create door.
                 using (Transaction t = new Transaction(doc, "Create door"))
                 {
+                    
                     t.Start();
                     if (!currentDoorType.IsActive)
                     {
@@ -167,6 +168,7 @@ namespace SOM.RevitTools.PlaceDoors
                     Parameter SOMIDParam = fm.LookupParameter("SOM ID");
                     SOMIDParam.Set(linkedDoor.doorId);
                     t.Commit();
+                    _List_CreatedDoors.Add(linkedDoor);
                 }
             }
         }
@@ -258,6 +260,7 @@ namespace SOM.RevitTools.PlaceDoors
             }
             catch { }
             trans.Commit();
+
         }
 
         /// <summary>

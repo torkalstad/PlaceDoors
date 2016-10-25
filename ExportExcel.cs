@@ -26,7 +26,7 @@ namespace SOM.RevitTools.PlaceDoors
             using (var package = new ExcelPackage(file))
             {
                 // add a new worksheet to the empty workbook
-                ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Door Information");
+                ExcelWorksheet worksheet = package.Workbook.Worksheets.Add(WorkSheetName);
 
                 // --------- Data and styling goes here -------------- //
                 // Add some formatting to the worksheet
