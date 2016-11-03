@@ -144,6 +144,7 @@ namespace SOM.RevitTools.PlaceDoors
                     if (proximity < distance)
                     {
                         distance = proximity;
+                        
                         var SOMIDParam = e.LookupParameter("SOM ID");
                         string wallSOMId = Library.GetParameterValue(SOMIDParam);
                         if (linkedDoor.HostObj.ToString() == wallSOMId)
@@ -177,23 +178,9 @@ namespace SOM.RevitTools.PlaceDoors
                 }
             }
         }
-        public string doorTypeByUnits(Document doc, double height, double width)
-        {
-            MyLibrary lib = new MyLibrary();
-            string doorType = "";
 
-            if (doc.ProjectInformation.Number == "215152")
-            {
-                doorType = lib.FootToMm(height).ToString() + " x " + lib.FootToMm(width).ToString();
-            }
-            else
-            {
-                double h = 12*height;
-                double w = 12*width;
-                doorType = h.ToString() + " x " + w.ToString();
-            }
-            return doorType;
-        }
+        
+
         //*****************************CreateNewType()*****************************
         public FamilySymbol CreateNewType(Document doc, FamilySymbol oldType, ObjDoors linkedDoor)
         {
@@ -271,6 +258,26 @@ namespace SOM.RevitTools.PlaceDoors
         }
 
         #region find Revit levels, symbols and element names. 
+
+        //*****************************doorTypeByUnits()*****************************
+        public string doorTypeByUnits(Document doc, double height, double width)
+        {
+            MyLibrary lib = new MyLibrary();
+            string doorType = "";
+
+            if (doc.ProjectInformation.Number == "215152")
+            {
+                doorType = lib.FootToMm(height).ToString() + " x " + lib.FootToMm(width).ToString();
+            }
+            else
+            {
+                double h = 12 * height;
+                double w = 12 * width;
+                doorType = h.ToString() + " x " + w.ToString();
+            }
+            return doorType;
+        }
+
         //*****************************findLevel()*****************************
         public Level findLevel(Document doc, ObjDoors door)
         {
@@ -306,6 +313,7 @@ namespace SOM.RevitTools.PlaceDoors
               .FirstOrDefault<Element>(
                 e => e.Name.Equals(targetName));
         }
+
         #endregion
     }
 }
