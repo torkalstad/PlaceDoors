@@ -42,9 +42,9 @@ namespace SOM.RevitTools.PlaceDoors
             Program.DoorProgram(doc, uidoc, List_DoorsLinkedModel, List_DoorsCurrentModel);
             List<ObjDoors> listCreatedDoors = Program._List_CreatedDoors;
             // Export to Excel to see information. 
-            ExportExcel exportExcel = new ExportExcel();
-            exportExcel.ExportToExcel(List_DoorsLinkedModel, "Linked Door Information");
-            exportExcel.ExportToExcel(listCreatedDoors, "Created Door Information");
+            //ExportExcel exportExcel = new ExportExcel();
+            //exportExcel.ExportToExcel(List_DoorsLinkedModel, "Linked Door Information");
+            //exportExcel.ExportToExcel(listCreatedDoors, "Created Door Information");
             return Result.Succeeded;
         }
     }

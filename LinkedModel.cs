@@ -79,6 +79,10 @@ namespace SOM.RevitTools.PlaceDoors
                                 ObjectDoor.Y = location.Point.Y;
                                 ObjectDoor.Z = location.Point.Z;
                                 ObjectDoor.level = levelName;
+                                
+                                FamilyInstance familyInstance = door as FamilyInstance;
+                                ObjectDoor.HostObj = familyInstance.Host.Id.IntegerValue;
+                                
                                 LinkedModelDoors.Add(ObjectDoor);
                             }
                             catch (Exception er)
