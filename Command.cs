@@ -31,6 +31,7 @@ namespace SOM.RevitTools.PlaceDoors
             
             // Current model doors
             List<ObjDoors> List_DoorsCurrentModel = new List<ObjDoors>();
+            
             LocalModel localModel = new LocalModel();
 
             // get doors from linked model 
@@ -38,13 +39,18 @@ namespace SOM.RevitTools.PlaceDoors
 
             // get doors from current model. 
             List_DoorsCurrentModel = localModel.CurrentModelDoors(doc);
+            // Remove elevator doors labeled STRUC
+            List_DoorsCurrentModel.RemoveAll(x => x.doorId == "STRUC");
 
-            Program.DoorProgram(doc, uidoc, List_DoorsLinkedModel, List_DoorsCurrentModel);
-            List<ObjDoors> listCreatedDoors = Program._List_CreatedDoors;
+            List<ObjDoors> listCreatedDoors = Program.DoorProgram(doc, uidoc, List_DoorsLinkedModel, List_DoorsCurrentModel);
+            
             // Export to Excel to see information. 
-            //ExportExcel exportExcel = new ExportExcel();
+            ExportExcel exportExcel = new ExportExcel();
+            if(listCreatedDoors != null)
+                exportExcel.ExportToExcel(listCreatedDoors, "Created Door Information");
+                
             //exportExcel.ExportToExcel(List_DoorsLinkedModel, "Linked Door Information");
-            //exportExcel.ExportToExcel(listCreatedDoors, "Created Door Information");
+            
             return Result.Succeeded;
         }
     }

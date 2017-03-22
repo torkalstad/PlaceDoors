@@ -1,0 +1,13 @@
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\NLog.config
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\som.PlaceDoors.addin
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\PlaceDoors.dll
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\PlaceDoors.pdb
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\DBLibrary.dll
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\EPPlus.dll
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\NLog.dll
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\DBLibrary.pdb
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\EPPlus.xml
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\bin\Release\NLog.xml
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\obj\Release\PlaceDoors.dll
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\obj\Release\PlaceDoors.pdb
+F:\00-PROGRAMMING SOM\PlaceDoors\PlaceDoors\obj\Release\PlaceDoors.csprojResolveAssemblyReference.cache

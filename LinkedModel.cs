@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using _00_RevitLibrary;
+using DBLibrary;
+//using _00_RevitLibrary;
 
 namespace SOM.RevitTools.PlaceDoors
 {
@@ -33,7 +34,7 @@ namespace SOM.RevitTools.PlaceDoors
                 {
                     if (linkedDoc.Title.Equals(linkType.Name))
                     {
-                        MyLibrary library = new MyLibrary();
+                        LibraryGetItems library = new LibraryGetItems();
                         List<Element> doors = library.GetFamilyElement(linkedDoc, BuiltInCategory.OST_Doors);
                         foreach (Element door in doors)
                         {
@@ -82,7 +83,7 @@ namespace SOM.RevitTools.PlaceDoors
                                 
                                 FamilyInstance familyInstance = door as FamilyInstance;
                                 ObjectDoor.HostObj = familyInstance.Host.Id.IntegerValue;
-                                
+                                ObjectDoor.wall = linkedDoc.GetElement(familyInstance.Host.Id) as Wall;
                                 LinkedModelDoors.Add(ObjectDoor);
                             }
                             catch (Exception er)

@@ -8,31 +8,34 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System.Linq;
 using Autodesk.Revit.DB.Structure;
-using _00_RevitLibrary;
+//using _00_RevitLibrary;
+using DBLibrary;
 using NLog;
 
 namespace SOM.RevitTools.PlaceDoors
 {
     class program
     {
-        //*****************************_List_CreatedDoors()*****************************
-        public List<ObjDoors> _List_CreatedDoors {get; set;}
-
         //*****************************logger()*****************************
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
+        private static List<Level> _ListLevels = null;
         //*****************************DoorProgram()*****************************
-        public void DoorProgram(Document doc, UIDocument uidoc,
+        public List<ObjDoors> DoorProgram(Document doc, UIDocument uidoc,
             List<ObjDoors> List_DoorsLinkedModel, List<ObjDoors> List_DoorsCurrentModel)
-        {
-            MyLibrary lib = new MyLibrary();
-
+        {            
+            List<ObjDoors> ListObjDoors = new List<ObjDoors>();
             // logger object. 
             Logger logger = LogManager.GetLogger("program");
             ExportExcel exportExcel = new ExportExcel();
 
+            // Get all levels and add to field. 
+            LibraryGetItems libGetItems = new LibraryGetItems();
+            _ListLevels = libGetItems.GetLevels(doc);
+
             foreach (ObjDoors linkedDoor in List_DoorsLinkedModel)
             {
+                
                 // check to see if door exist 
                 ObjDoors DoorFound = List_DoorsCurrentModel.Find(x => x.doorId == linkedDoor.doorId);
                 // if it doesn't exist it will create a new door. 
@@ -40,8 +43,8 @@ namespace SOM.RevitTools.PlaceDoors
                 {
                     try
                     {
-                        //LACMA_CreateDoors(uidoc, doc, linkedDoor);
-                        CreateDoors(uidoc, doc, linkedDoor);
+                        ObjDoors door = CreateDoors(uidoc, doc, linkedDoor);
+                        ListObjDoors.Add(door);
                     }
                     catch (Exception e)
                     {
@@ -61,15 +64,27 @@ namespace SOM.RevitTools.PlaceDoors
                         string ErrMessage = e.Message;
                     }
 
+                    // Get all the levels from current project. 
+                    Level level = findLevel(doc, linkedDoor);
+
+                    // Level offset from architecture. 
+                    LibraryGetItems Library = new LibraryGetItems();
+                    LibraryConvertUnits library_Units = new LibraryConvertUnits();
+                    double offset = 0;
+                    Level CurrentLevel = _ListLevels.Find(x => x.Name == level.Name);
+                    try
+                    {
+
+                        Parameter parameter_LevelOffsetFF = CurrentLevel.LookupParameter("LEVEL OFFSET FF");
+                        offset = library_Units.InchesToFeet(Convert.ToDouble(Library.GetParameterValue(parameter_LevelOffsetFF)));
+                    }
+                    catch { }
+
                     // Check to see if door size match. 
-                    //double height = Math.Round(lib.FootToMm(linkedDoor.doorHeight), 2);
-                    //double width = Math.Round(lib.FootToMm(linkedDoor.doorWidth), 2);
-                    double height = Math.Round(linkedDoor.doorHeight, 2);
-                    double width = Math.Round(linkedDoor.doorWidth, 2);
-                    //String doorType = height.ToString() + "MM" + " x " + width.ToString() + "MM";
+                    double height = Math.Round(linkedDoor.doorHeight + offset, 3);
+                    double width = Math.Round(linkedDoor.doorWidth, 3);
                     String doorType = doorTypeByUnits(doc, height, width);
 
-                    //if (doorType != "0MM x 0MM")
                     if (doorType != "0 x 0")
                     {
                         if (DoorFound.doorName != doorType)
@@ -80,7 +95,7 @@ namespace SOM.RevitTools.PlaceDoors
                             {
                                 FamilySymbol oldType = findSymbol(doc, DoorFound);
 
-                                FamilySymbol ChangeFamilySymbol = CreateNewType(doc, oldType, linkedDoor);
+                                FamilySymbol ChangeFamilySymbol = CreateNewType(doc, oldType, linkedDoor, offset);
                                 //FamilySymbol ChangeFamilySymbol = BKK_CreateNewType(doc, oldType, linkedDoor);
                                 changeType(doc, DoorFound, ChangeFamilySymbol);
                             }
@@ -89,21 +104,40 @@ namespace SOM.RevitTools.PlaceDoors
                                 changeType(doc, DoorFound, familySymbol);
                             }
                         }
-                    }
+                    }   
                 }
             }
+            //REMOVE UNSUED DOORS. 
+            RemoveUnused(doc, List_DoorsLinkedModel, List_DoorsCurrentModel);
+
+            return ListObjDoors;
         }
 
-        #region CREATE ELEMENTS FOR LACMA 
+        #region CREATE ELEMENTS
 
         //*****************************CreateDoors()*****************************
-        public void CreateDoors(UIDocument uidoc, Document doc, ObjDoors linkedDoor)
+        public ObjDoors CreateDoors(UIDocument uidoc, Document doc, ObjDoors linkedDoor)
         {
-            MyLibrary Library = new MyLibrary();
+            LibraryGetItems Library = new LibraryGetItems();
+            LibraryConvertUnits library_Units = new LibraryConvertUnits();
+            // Get all the levels from current project. 
             Level level = findLevel(doc, linkedDoor);
-            // make door type height x width 
-            double height = Math.Round(linkedDoor.doorHeight, 2);
-            double width = Math.Round(linkedDoor.doorWidth, 2);
+
+            // Level offset from architecture. 
+            double offset = 0;
+            Level CurrentLevel = _ListLevels.Find(x => x.Name == level.Name);
+            try
+            {
+                
+                Parameter parameter_LevelOffsetFF = CurrentLevel.LookupParameter("LEVEL OFFSET FF");
+                offset = library_Units.InchesToFeet(Convert.ToDouble(Library.GetParameterValue(parameter_LevelOffsetFF)));                
+            }
+            catch { }
+            
+
+            // CREATE : door type height x width 
+            double height = Math.Round(linkedDoor.doorHeight + offset, 3);
+            double width = Math.Round(linkedDoor.doorWidth, 3);
             String doorType = doorTypeByUnits(doc, height, width);
 
             if (doorType != "0 x 0")
@@ -118,11 +152,11 @@ namespace SOM.RevitTools.PlaceDoors
                 if (currentDoorType == null)
                 {
                     FamilySymbol familySymbol_OldType = FindElementByName(doc, typeof(FamilySymbol), "10 x 10") as FamilySymbol;
-                    currentDoorType = CreateNewType(doc, familySymbol_OldType, linkedDoor);
+                    currentDoorType = CreateNewType(doc, familySymbol_OldType, linkedDoor, offset);
                 }
 
-                // Convert coordinates to double and create XYZ point.
-                XYZ xyz = new XYZ(linkedDoor.X, linkedDoor.Y, linkedDoor.level.Elevation + linkedDoor.doorSillHeight);
+                // Convert coordinates to double and create XYZ point. Use offset level from current model.
+                XYZ xyz = new XYZ(linkedDoor.X, linkedDoor.Y, CurrentLevel.Elevation + linkedDoor.doorSillHeight);
 
                 //Find the hosting Wall (nearst wall to the insertion point)
                 List<Wall> walls = Library.GetWalls(doc);
@@ -144,48 +178,53 @@ namespace SOM.RevitTools.PlaceDoors
                     if (proximity < distance)
                     {
                         distance = proximity;
-                        
+
                         var SOMIDParam = e.LookupParameter("SOM ID");
                         string wallSOMId = Library.GetParameterValue(SOMIDParam);
                         if (linkedDoor.HostObj.ToString() == wallSOMId)
                         {
                             wall = w;
                         }
+                            
                     }
                 }
-                if (wall != null)
+                try
                 {
-                    // Create door.
-                    using (Transaction t = new Transaction(doc, "Create door"))
+                    if (wall != null)
                     {
-
-                        t.Start();
-                        if (!currentDoorType.IsActive)
+                        // Create door.
+                        using (Transaction t = new Transaction(doc, "Create door"))
                         {
-                            // Ensure the family symbol is activated.
-                            currentDoorType.Activate();
-                            doc.Regenerate();
+
+                            t.Start();
+                            if (!currentDoorType.IsActive)
+                            {
+                                // Ensure the family symbol is activated.
+                                currentDoorType.Activate();
+                                doc.Regenerate();
+                            }
+                            // Create window
+                            // unless you specified a host, Revit will create the family instance as orphabt object.
+                            FamilyInstance fm = doc.Create.NewFamilyInstance(xyz, currentDoorType, wall, level, StructuralType.NonStructural);
+                            // Set new local door id to match linked model element id. 
+                            Parameter SOMIDParam = fm.LookupParameter("SOM ID");
+                            SOMIDParam.Set(linkedDoor.doorId);
+                            linkedDoor.wall = wall;
+                            t.Commit();
+                            return linkedDoor;
                         }
-                        // Create window
-                        // unliss you specified a host, Revit will create the family instance as orphabt object.
-                        FamilyInstance fm = doc.Create.NewFamilyInstance(xyz, currentDoorType, wall, level, StructuralType.NonStructural);
-                        // Set new local door id to match linked model element id. 
-                        Parameter SOMIDParam = fm.LookupParameter("SOM ID");
-                        SOMIDParam.Set(linkedDoor.doorId);
-                        t.Commit();
-                        _List_CreatedDoors.Add(linkedDoor);
                     }
                 }
+                catch { }
             }
+            return null;
         }
 
-        
-
         //*****************************CreateNewType()*****************************
-        public FamilySymbol CreateNewType(Document doc, FamilySymbol oldType, ObjDoors linkedDoor)
+        public FamilySymbol CreateNewType(Document doc, FamilySymbol oldType, ObjDoors linkedDoor, double offset)
         {
-            double height = Math.Round(linkedDoor.doorHeight, 2);
-            double width = Math.Round(linkedDoor.doorWidth, 2);
+            double height = Math.Round(linkedDoor.doorHeight + offset, 3);
+            double width = Math.Round(linkedDoor.doorWidth, 3);
             String doorType = doorTypeByUnits(doc, height, width);
 
             FamilySymbol familySymbol = null;
@@ -201,6 +240,9 @@ namespace SOM.RevitTools.PlaceDoors
         }
 
         #endregion
+
+
+        #region MOVE, CHANGE TYPE AND REMOVE UNUSED 
 
         //*****************************MoveDoors()*****************************
         public void MoveDoors(Document doc, ObjDoors linkedDoor, ObjDoors localDoor)
@@ -240,6 +282,32 @@ namespace SOM.RevitTools.PlaceDoors
             t.Commit();
         }
 
+        //*****************************RemoveUnused()*****************************
+        public void RemoveUnused(Document doc, List<ObjDoors> List_DoorsLinkedModel, List<ObjDoors> List_DoorsCurrentModel)
+        {
+            foreach (ObjDoors CurrentDoor in List_DoorsCurrentModel)
+            {
+                // check to see if door exist 
+                ObjDoors DoorFound = List_DoorsLinkedModel.Find(x => x.doorId == CurrentDoor.doorId);
+                // if it doesn't exist it will remove door from project
+                if (DoorFound == null)
+                {
+                    try
+                    {
+                        Transaction t = new Transaction(doc);
+                        t.Start("Remove Element");
+                        Element e = CurrentDoor.doorElement;
+                        doc.Delete(e.Id);
+                        t.Commit();
+                    }
+                    catch (Exception e)
+                    {
+                        string ErrMessage = e.Message;
+                    }
+                }
+            }
+        }
+
         //*****************************changeType()*****************************
         public void changeType(Document doc, ObjDoors CurrentDoors, FamilySymbol symbol)
         {
@@ -256,25 +324,20 @@ namespace SOM.RevitTools.PlaceDoors
             trans.Commit();
 
         }
+        #endregion
 
-        #region find Revit levels, symbols and element names. 
+
+        #region LEVELS, SYMBOLS AND ELEMENT NAMES
 
         //*****************************doorTypeByUnits()*****************************
         public string doorTypeByUnits(Document doc, double height, double width)
         {
-            MyLibrary lib = new MyLibrary();
+            LibraryConvertUnits lib = new LibraryConvertUnits();
             string doorType = "";
+            double h = 12 * height;
+            double w = 12 * width;
+            doorType = h.ToString() + " x " + w.ToString();
 
-            if (doc.ProjectInformation.Number == "215152")
-            {
-                doorType = lib.FootToMm(height).ToString() + " x " + lib.FootToMm(width).ToString();
-            }
-            else
-            {
-                double h = 12 * height;
-                double w = 12 * width;
-                doorType = h.ToString() + " x " + w.ToString();
-            }
             return doorType;
         }
 
@@ -312,6 +375,20 @@ namespace SOM.RevitTools.PlaceDoors
               .OfClass(targetType)
               .FirstOrDefault<Element>(
                 e => e.Name.Equals(targetName));
+        }
+
+        //*****************************GetDesignOption()*****************************
+        public bool GetDesignOption(Document doc, Element e)
+        {
+            bool result = true;
+            if (e.DesignOption != null)
+            {
+                if (e.DesignOption.Name == "T7 Basement - Opt 1 - under Bar (primary)")
+                    result = true;
+                else
+                    result = false;
+            }
+            return result;
         }
 
         #endregion

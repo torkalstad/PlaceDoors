@@ -62,8 +62,8 @@
     <AssemblyName>PlaceDoors</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="00-RevitLibrary">
-      <HintPath>..\..\00-RevitLibrary\00-RevitLibrary\bin\Release\00-RevitLibrary.dll</HintPath>
+    <Reference Include="DBLibrary">
+      <HintPath>..\..\DBLibrary\DBLibrary\bin\Release\DBLibrary.dll</HintPath>
     </Reference>
     <Reference Include="EPPlus">
       <HintPath>..\packages\EPPlus.4.1.0\lib\net40\EPPlus.dll</HintPath>
@@ -75,9 +75,11 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="RevitAPI">
       <HintPath>C:\Program Files\Autodesk\Revit 2016\RevitAPI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="RevitAPIUI">
       <HintPath>C:\Program Files\Autodesk\Revit 2016\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
@@ -137,6 +139,6 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PostBuildEvent>copy "$(TargetDir)*.*" "$(AppData)\Autodesk\REVIT\Addins\2017\"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetDir)*.*" "$(AppData)\Autodesk\REVIT\Addins\2016\"</PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using _00_RevitLibrary;
+using DBLibrary;
+//using _00_RevitLibrary;
 
 namespace SOM.RevitTools.PlaceDoors
 {
@@ -14,7 +15,7 @@ namespace SOM.RevitTools.PlaceDoors
             List<ObjDoors> currentModelDoors = new List<ObjDoors>();
 
             {
-                MyLibrary library = new MyLibrary();
+                LibraryGetItems library = new LibraryGetItems();
                 List<Element> doors = library.GetFamilyElement(doc, BuiltInCategory.OST_Doors);
                 foreach (Element door in doors)
                 {
